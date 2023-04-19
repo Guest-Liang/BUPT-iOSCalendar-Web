@@ -59,6 +59,8 @@ Data=requests.post(url=Url,headers=Headers,data=Info) #获取课表html
 if "请先登录系统" in Data.text:
     print("登录失败，请检查学号和密码以及网络连接，并重新运行程序")
     exit()
+else:
+    print("登录成功，正在处理")
 
 #将.do写入本地html文件
 if IsLocalHtml:
