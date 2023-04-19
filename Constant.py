@@ -1,6 +1,6 @@
 #个人信息Personal Information
-SchoolID='2021212702'
-Password_jwgl='1023BUPTjwgl'
+SchoolID=''
+Password_jwgl=''
 
 
 #用于登录的URL以及UA
