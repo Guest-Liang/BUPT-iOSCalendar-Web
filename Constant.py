@@ -1,8 +1,8 @@
 import datetime
 import re
 #个人信息Personal Information
-SchoolID='2021212702' #引号之间填入学号
-Password_jwgl='1023BUPTjwgl' #引号之间填入教务系统密码
+SchoolID='' #引号之间填入学号
+Password_jwgl='' #引号之间填入教务系统密码
 
 
 #找到字符串中某个关键值的所有索引，存放在list(int)中
