@@ -5,6 +5,9 @@ import datetime
 import execjs
 from Constant import *
 
+#是否写入本地html
+IsLocalHtml=False
+
 def GetXNXQ(): #获取学年学期，形如'2022-2023-2'，2-7月为第二学期，8-次年1月为第一学期
     CurrentYear=datetime.datetime.now().year
     CurrentMonth=datetime.datetime.now().month
@@ -58,10 +61,12 @@ if "请先登录系统" in Data.text:
     exit()
 
 #将.do写入本地html文件
-print("正在写入本地html")
-try:
-    with open(f'./{datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")}.html', 'w', encoding='utf-8') as file:
-        file.write(Data.text)
-        print(f'[success]')
-except Exception:
-    print("生成文件失败")
+if IsLocalHtml:
+    print("正在写入本地html")
+    try:
+        with open(f'./{datetime.datetime.now().strftime("%Y-%m-%d-%H-%M")}.html', 'w', encoding='utf-8') as file:
+            file.write(Data.text)
+            print(f'[success]')
+    except Exception:
+        print("生成文件失败")
+

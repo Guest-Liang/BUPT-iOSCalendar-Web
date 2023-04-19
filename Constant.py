@@ -2,7 +2,6 @@
 SchoolID=''
 Password_jwgl=''
 
-
 #用于登录的URL以及UA
 USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.0.0'
 LOGIN_URL='https://jwgl.bupt.edu.cn/jsxsd/'
@@ -19,7 +18,7 @@ KBLB={
 } #由[https://jwgl.bupt.edu.cn/jsxsd/framework/xsMain.jsp]的html代码得到的'课表类别'
 
 #教务系统加密算法，由[https://jwgl.bupt.edu.cn/jsxsd/framework/xsMain.jsp]得到
-KEYSTRING = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+KEYSTRING="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
 CONWORK_JS='''
 eval(function (p, a, c, k, e, d)
 {
@@ -66,19 +65,6 @@ function encodeInp(input) {
 }
 '''
 
-
 #referer_get_api='https://jwgl.bupt.edu.cn/jsxsd/framework/xsMain.jsp'
 #userAccount_xpath='/html/body/div/div[2]/div[3]/form/ul[1]/li[2]/input' #由LOGIN_API的html代码得到
 #userPassword_xpath='/html/body/div/div[2]/div[3]/form/ul[1]/li[3]/input' #由LOGIN_API的html代码得到
-
-class HEADERS:
-#    REFERER_LOGIN_API = 'https://app.bupt.edu.cn/uc/wap/login'
-#    UA = ('Mozilla/5.0 (iPhone; CPU iPhone OS 13_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) '
-#          'Mobile/15E148 MicroMessenger/7.0.11(0x17000b21) NetType/4G Language/zh_CN')
-#    ACCEPT_JSON = 'application/json'
-    ACCEPT_HTML='text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
-#    REQUEST_WITH_XHR = 'XMLHttpRequest'
-    ACCEPT_LANG='zh-cn'
-#    CONTENT_TYPE_UTF8 = 'application/x-www-form-urlencoded; charset=UTF-8'
-#    CONTENT_TYPE_FORM = 'application/x-www-form-urlencoded'
-    USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.0.0'
