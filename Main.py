@@ -61,6 +61,7 @@ if "请先登录系统" in Data.text:
     exit()
 else:
     print("登录成功，正在处理")
+    print("已获取到课表信息")
 
 #可选将.do写入本地html文件
 if IsLocalHtml:
@@ -72,3 +73,35 @@ if IsLocalHtml:
     except Exception:
         print("生成文件失败")
 
+
+#开始制作ics文件
+print("正在制作ics文件")
+#制作部分
+MyCalendar=icalendar.Calendar()
+MyCalendar.add('PRODID', '-//MY_CALENDAR_PRODUCT//GL//')
+MyCalendar.add('VERSION', '2.0')  #固定属性，版本2.0
+MyCalendar.add('CALSCALE', 'GREGORIAN')  #公历
+MyCalendar.add('METHOD', 'PUBLISH')
+MyCalendar.add('X-WR-CALNAME', f'{Xueqi}')  #通用属性，日历名称，默认为学年
+MyCalendar.add('X-WR-TIMEZONE', 'Asia/Shanghai')  #通用属性，指定时区
+MyCalendar.add('X-APPLE-CALENDAR-COLOR', '#E1FFFF')  #私有属性，指定Apple日历颜色，可自己更改，填入十六进制代码
+
+
+# Course=re.findall(r'<td class="kbcontent" align="center" valign="middle" rowspan="(\d+)" colspan="(\d+)" title="(\d+)-(\d+)周)">([\s\S]*?)</td>',Data.text) #正则匹配课程信息
+# TeacherName=re.findall(r'<td class="kbcontent" align="center" valign="middle" rowspan="(\d+)" colspan="(\d+)" title="([\s\S]*?)">[\s\S]*?</td>',Data.text) #正则匹配教师姓名
+# ClassWeeks=re.findall(r'<td class="kbcontent" align="center" valign="middle" rowspan="(\d+)" colspan="(\d+)" title="([\s\S]*?)">[\s\S]*?</td>',Data.text) #正则匹配上课周次
+# Classroom=re.findall(r'<td class="kbcontent" align="center" valign="middle" rowspan="(\d+)" colspan="(\d+)" title="([\s\S]*?)">[\s\S]*?</td>',Data.text) #正则匹配上课教室
+# LessonNum=re.findall(r'<td class="kbcontent" align="center" valign="middle" rowspan="(\d+)" colspan="(\d+)" title="([\s\S]*?)">[\s\S]*?</td>',Data.text) #正则匹配上课节次
+
+
+
+
+'''
+try:
+    with open(f'YourCalendar.ics', 'wb') as file:
+        file.write(MyCalendar.to_ical())
+        print('[Success]')
+        del MyCalendar
+except Exception:
+    print("生成文件失败，请重试")
+'''
