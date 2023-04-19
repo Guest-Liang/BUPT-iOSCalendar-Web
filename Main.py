@@ -62,7 +62,7 @@ if "请先登录系统" in Data.text:
 else:
     print("登录成功，正在处理")
 
-#将.do写入本地html文件
+#可选将.do写入本地html文件
 if IsLocalHtml:
     print("正在写入本地html")
     try:

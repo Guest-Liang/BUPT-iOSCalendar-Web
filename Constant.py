@@ -65,6 +65,7 @@ function encodeInp(input) {
 }
 '''
 
+
 #referer_get_api='https://jwgl.bupt.edu.cn/jsxsd/framework/xsMain.jsp'
 #userAccount_xpath='/html/body/div/div[2]/div[3]/form/ul[1]/li[2]/input' #由LOGIN_API的html代码得到
 #userPassword_xpath='/html/body/div/div[2]/div[3]/form/ul[1]/li[3]/input' #由LOGIN_API的html代码得到
