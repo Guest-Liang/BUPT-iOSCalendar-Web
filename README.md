@@ -1,5 +1,10 @@
 # BUPT-iOSCalendar-Web   
 填写学号以及教务密码，从教务系统中获取学期课表制作成ics文件   
+**所需环境：**
+[![nodeversion](https://img.shields.io/badge/node%20version-20.0.0-%23CA6A54)](https://img.shields.io/badge/node%20version-20.0.0-%23CA6A54)
+[![python](https://img.shields.io/badge/Python-%3E%3D3.10-%2373C549)](https://img.shields.io/badge/Python-%3E%3D3.10-%2373C549)
+
+
 
 ## 使用方法   
 ### 第一步   
@@ -33,6 +38,7 @@ python Main.py
 ```   
 看到最后的`[Success]`就说明成功了，ics文件生成在当前目录下    
 如果失败了请提issue，并附上一切必要的信息   
+### 校外访问可能需要打开`北邮VPN`并连接到学校内网（未经测试，可能无法成功）   
 
 ### 第三步
 得到的ics文件导入Apple设备中即可使用。  
