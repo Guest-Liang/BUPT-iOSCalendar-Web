@@ -2,7 +2,6 @@ import requests
 import icalendar
 import re
 import datetime
-import execjs
 import win32com.client
 import openpyxl
 import os
@@ -24,52 +23,6 @@ KBLB = { #由[https://jwgl.bupt.edu.cn/jsxsd/framework/xsMain.jsp]的html代码�
     '0': 'kckb',  #课程课表
     '1': 'tzdkb'  #通知单课表
 }
-#教务系统加密算法，由[https://jwgl.bupt.edu.cn/jsxsd/framework/xsMain.jsp]得到的conwork.js
-CONWORK_JS = '''
-eval(function (p, a, c, k, e, d)
-{
-    e = function (c){return (c < a ? "": e(parseInt(c / a))) + ((c = c % a) > 35 ? String.fromCharCode(c + 29) : c.toString(36))};
-    if (!''.replace(/^/, String))
-    {
-        while (c--) d[e(c)] = k[c] || e(c);
-        k = [function (e){return d[e]}];
-        e = function() {return '\\w+'};
-        c = 1;
-    };
-    while (c--) if (k[c]) p = p.replace(new RegExp('\\b' + e(c) + '\\b', 'g'), k[c]);
-    return p;
-} ('b 9="o+/=";p q(a){b e="";b 8,5,7="";b f,g,c,1="";b i=0;m{8=a.h(i++);5=a.h(i++);7=a.h(i++);f=8>>2;g=((8&3)<<4)|(5>>4);c=((5&s)<<2)|(7>>6);1=7&t;k(j(5)){c=1=l}v k(j(7)){1=l}e=e+9.d(f)+9.d(g)+9.d(c)+9.d(1);8=5=7="";f=g=c=1=""}u(i<a.n);r e}', 32, 32, '|enc4||||chr2||chr3|chr1|keyStr|input|var|enc3|charAt|output|enc1|enc2|charCodeAt||isNaN|if|64|do|length|ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789|function|encodeInp|return|15|63|while|else'.split('|'), 0, {}));
-'''
-
-#很明显是eval加密，解压一下就得到原始js代码
-CONWORK_JS_DECODED = '''
-var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-
-function encodeInp(input) {
-	var output = "";
-	var chr1, chr2, chr3 = "";
-	var enc1, enc2, enc3, enc4 = "";
-	var i = 0;
-	do {
-		chr1 = input.charCodeAt(i++);
-		chr2 = input.charCodeAt(i++);
-		chr3 = input.charCodeAt(i++);
-		enc1 = chr1 >> 2;
-		enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-		enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-		enc4 = chr3 & 63;
-		if (isNaN(chr2)) {
-			enc3 = enc4 = 64
-		} else if (isNaN(chr3)) {
-			enc4 = 64
-		}
-		output = output + keyStr.charAt(enc1) + keyStr.charAt(enc2) + keyStr.charAt(enc3) + keyStr.charAt(enc4);
-		chr1 = chr2 = chr3 = "";
-		enc1 = enc2 = enc3 = enc4 = ""
-	} while (i < input.length);
-	return output
-}
-'''
 
 def GetXNXQ(): #获取学年学期，形如'2022-2023-2'，2-7月为第二学期，8-次年1月为第一学期
     CurrentYear = datetime.datetime.now().year
@@ -86,11 +39,35 @@ def ProcessCK(CK):  #处理cookies，将cookies转换为字符串
         Cookie += f'{Name}={Value};'
     return Cookie
 
+#以下加密算法参考[https://github.com/LAWTED/BUPT-Auto-Syllabu/blob/main/process.py]得到
+KEYSTRING = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
+def EncodeInp(Input):
+    Output = ''
+    Chr1, Chr2, Chr3 = '', '', ''
+    Enc1, Enc2, Enc3 = '', '', ''
+    i = 0
+    while True:
+        Chr1 = ord(Input[i])
+        i += 1
+        Chr2 = ord(Input[i]) if i < len(Input) else 0
+        i += 1
+        Chr3 = ord(Input[i]) if i < len(Input) else 0
+        i += 1
+        Enc1 = Chr1 >> 2
+        Enc2 = ((Chr1 & 3) << 4) | (Chr2 >> 4)
+        Enc3 = ((Chr2 & 15) << 2) | (Chr3 >> 6)
+        Enc4 = Chr3 & 63
+        if Chr2 == 0:
+            Enc3 = Enc4 = 64
+        elif Chr3 == 0:
+            Enc4 = 64
+        Output = Output + KEYSTRING[Enc1] + KEYSTRING[Enc2] + KEYSTRING[Enc3] + KEYSTRING[Enc4]
+        Chr1 = Chr2 = Chr3 = ''
+        Enc1 = Enc2 = Enc3 = Enc4 = ''
+        if i >= len(Input): break
+    return Output
 
-#直接编译运行js文件，获取加密后的学号和密码
-ctx = execjs.compile(CONWORK_JS_DECODED)
-Encoded = str(ctx.call("encodeInp", SchoolID)) + "%%%" + str(ctx.call("encodeInp", Password_jwgl))  #加密后的学号和密码
-
+Encoded = EncodeInp(SchoolID) + "%%%" + EncodeInp(Password_jwgl) #加密后的学号和密码
 Xueqi = GetXNXQ() #获取学年学期，形如'2022-2023-2'
 UserData = { #用户数据，保存在Constant.py中，根据需要修改
     'userAccount': SchoolID,
@@ -102,7 +79,7 @@ UserData = { #用户数据，保存在Constant.py中，根据需要修改
 print('登录北邮教务管理系统')
 Session = requests.Session()
 Login = Session.get(url=LOGIN_URL, headers={'User-Agent': USER_AGENT})
-Cookies1 = Login.cookies.items()  #处理cookies
+Cookies1 = Login.cookies.items() #处理cookies
 Cookie = ProcessCK(Cookies1)
 
 #设置headers，先post用户数据
@@ -160,6 +137,7 @@ excel.Application.Quit()
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
+#以下Excel处理代码来自https://github.com/Guest-Liang/BUPT-iOSCalendar-Excel
 #定义课程开始时间
 StartTime = [
     datetime.time(8, 0, 0),   datetime.time(8, 50, 0),  datetime.time(9, 50, 0), 
@@ -188,7 +166,6 @@ def ChangeIntoList_int(s):
         s = s.replace(f'{start}-{end}', ','.join(map(str, range(int(start), int(end) + 1))))
     return list(map(int, s.split(',')))
 
-
 #获取学号，打开xlsx文件
 userid = SchoolID
 WorkBook = openpyxl.load_workbook(filename=f"./学生个人课表_{userid}.xlsx")
@@ -214,16 +191,16 @@ print("正在处理")
 #制作部分
 MyCalendar = icalendar.Calendar()
 MyCalendar.add('PRODID', '-//MY_CALENDAR_PRODUCT//GL//')
-MyCalendar.add('VERSION', '2.0')  #固定属性，版本2.0
+MyCalendar.add('VERSION', '2.0') #固定属性，版本2.0
 MyCalendar.add('CALSCALE', 'GREGORIAN')  #公历
 MyCalendar.add('METHOD', 'PUBLISH')
-MyCalendar.add('X-WR-CALNAME', f'{SchoolYear}')  #通用属性，日历名称，默认为学年
-MyCalendar.add('X-WR-TIMEZONE', 'Asia/Shanghai')  #通用属性，指定时区
-MyCalendar.add('X-APPLE-CALENDAR-COLOR', '#E1FFFF')  #私有属性，指定Apple日历颜色，可自己更改，填入十六进制代码
+MyCalendar.add('X-WR-CALNAME', f'{SchoolYear}') #通用属性，日历名称，默认为学年
+MyCalendar.add('X-WR-TIMEZONE', 'Asia/Shanghai') #通用属性，指定时区
+MyCalendar.add('X-APPLE-CALENDAR-COLOR', '#E1FFFF') #私有属性，指定Apple日历颜色，可自己更改，填入十六进制代码
 for Column in range(2, 9):
     for Row in range(4, 18):
-        CellBR = GetElementIndex("\n", Sheet.cell(row=Row, column=Column).value)
-        for i in range(int(len(CellBR) / 5)):  #拆分课程、教师名字、上课周数、上课教室、上课节次
+        CellBR = GetElementIndex("\n", Sheet.cell(row=Row, column=Column).value) #根据换行符位置进行拆分
+        for i in range(int(len(CellBR) / 5)): #拆分 课程、教师名字、上课周数、上课教室、上课节次
             Course = Sheet.cell(Row, Column).value[CellBR[5 * i] + 1:CellBR[5 * i + 1]]
             TeacherName = Sheet.cell(Row, Column).value[CellBR[5 * i + 1] + 1:CellBR[5 * i + 2]]
             ClassWeeks = Sheet.cell(Row, Column).value[CellBR[5 * i + 2] + 1:CellBR[5 * i + 3]]
@@ -234,19 +211,19 @@ for Column in range(2, 9):
                 LessonNum = Sheet.cell(Row, Column).value[CellBR[5 * i + 4] + 1:CellBR[5 * i + 5]]
             ListLessonNum = LessonNum.replace("[", "").replace("]", "").replace("节", "").split("-")
             ListLessonNum = list(map(int, ListLessonNum))
-            if (Row - 3 == ListLessonNum[0]):  #是第一节课才添加，下一节跳过
+            if (Row - 3 == ListLessonNum[0]): #是第一节课才添加，下一节跳过（意思是默认合并课程，避免导致相邻、连着的课程重复提醒）
                 ListClassWeeks = ChangeIntoList_int(ClassWeeks.replace("[周]", ""))
                 for j in range(len(ListClassWeeks)):
                     MyEvent = icalendar.Event()
-                    MyEvent.add('SUMMARY', Course + ' ' + Classroom)  #事件名称：课程名加教室
+                    MyEvent.add('SUMMARY', Course + ' ' + Classroom) #事件名称：课程名加教室
                     MyEvent.add('DTSTAMP', datetime.datetime.today())
                     MyEvent.add('DTSTART', datetime.datetime.combine(StartDate + datetime.timedelta(weeks=ListClassWeeks[j] - 1, days=Column - 2), StartTime[ListLessonNum[0] - 1]))
                     MyEvent.add('DTEND', datetime.datetime.combine(StartDate + datetime.timedelta(weeks=ListClassWeeks[j] - 1, days=Column - 2), EndTime[ListLessonNum[-1] - 1]))
-                    MyEvent.add('DESCRIPTION', TeacherName)  #教师姓名写在备注里
-                    MyAlarm = icalendar.Alarm()  #添加提醒作为事件的附加属性
-                    MyAlarm.add('TRIGGER', datetime.timedelta(minutes=-10))  #提前10分钟提醒
-                    MyAlarm.add('ACTION', "DISPLAY")  #通知提醒
-                    MyAlarm.add('DESCRIPTION', Course)  #提醒内容：课程名称
+                    MyEvent.add('DESCRIPTION', TeacherName) #教师姓名写在备注里
+                    MyAlarm = icalendar.Alarm() #添加提醒作为事件的附加属性
+                    MyAlarm.add('TRIGGER', datetime.timedelta(minutes=-10)) #提前10分钟提醒
+                    MyAlarm.add('ACTION', "DISPLAY") #通知提醒
+                    MyAlarm.add('DESCRIPTION', Course) #提醒内容：课程名称
                     MyEvent.add_component(MyAlarm)
                     MyCalendar.add_component(MyEvent)
                     del MyAlarm, MyEvent

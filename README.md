@@ -8,14 +8,12 @@
 
 ## 使用方法   
 ### 第一步   
-本地运行py文件需要`高于python3.10`的`python`环境，以及`nodejs`环境，并且配置好环境变量等，命令行中输入`python -V`以及`node -v`能出现版本号   
-nodejs下载地址：https://nodejs.org/en/download/   
+本地运行py文件需要`高于python3.10`的`python`环境，并且配置好环境变量等，命令行中输入`python -V`能出现版本号   
 安装过程请自行搜索解决   
 如果已经配置好，在`cmd`或者`PowerShell`运行以下命令，安装需要的库：   
 ```python3
 pip install icalendar
 pip install requests
-pip install PyExecJS
 pip install pywin32
 pip install openpyxl
 ```   
@@ -23,7 +21,6 @@ pip install openpyxl
 ```python3
 pip install icalendar -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install requests -i https://pypi.tuna.tsinghua.edu.cn/simple
-pip install PyExecJS -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install pywin32 -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install openpyxl -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```   
@@ -38,7 +35,8 @@ python Main.py
 ```   
 看到最后的`[Success]`就说明成功了，ics文件生成在当前目录下    
 如果失败了请提issue，并附上一切必要的信息   
-### 校外访问可能需要打开`北邮VPN`并连接到学校内网（未经测试，可能无法成功）   
+### 校外访问可能需要打开`北邮VPN`并连接到学校内网（测试通过）   
+2023-5-3更新：打开`北邮VPN`并连上之后，可以正常获取   
 
 ### 第三步
 得到的ics文件导入Apple设备中即可使用。  
@@ -49,3 +47,6 @@ python Main.py
 
 # 目前bug：  
 iOS & iPadOS不能识别私有属性中的颜色，导致`X-APPLE-CALENDAR-COLOR`这一项参数无效   
+
+# 咕咕咕：   
+GUI界面缓慢开发中……   
