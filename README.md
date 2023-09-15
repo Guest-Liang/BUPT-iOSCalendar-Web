@@ -1,7 +1,6 @@
 # BUPT-iOSCalendar-Web   
 填写学号以及教务密码，从教务系统中获取学期课表制作成ics文件   
 **所需环境：**
-[![nodeversion](https://img.shields.io/badge/node%20version-20.0.0-%23CA6A54)](https://img.shields.io/badge/node%20version-20.0.0-%23CA6A54)
 [![python](https://img.shields.io/badge/Python-%3E%3D3.10-%2373C549)](https://img.shields.io/badge/Python-%3E%3D3.10-%2373C549)
 
 
