@@ -10,11 +10,17 @@ from Constant import *
 #是否写入本地html
 IsLocalHtml = False
 
+#-----------------------------------------------------------------------------------
+JWIP = ["http://10.3.58.10:18080/jsxsd", "http://10.3.58.11:18081/jsxsd",
+        "http://10.3.58.12:18082/jsxsd", "http://10.3.58.13:18083/jsxsd",
+        "http://10.3.58.14:18084/jsxsd", "http://10.3.58.15:18085/jsxsd",
+        "http://10.3.58.16:18086/jsxsd", "http://10.3.58.17:18087/jsxsd"] #仅10可用，11-17不可用
+
 #用于登录的URL以及UA
 USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.0.0'
-LOGIN_URL = 'https://jwgl.bupt.edu.cn/jsxsd/'
-GET_API = 'https://jwgl.bupt.edu.cn/jsxsd/xskb/xskb_list.do'
-POST_URL = 'https://jwgl.bupt.edu.cn/jsxsd/xk/LoginToXk'
+LOGIN_URL = JWIP[0]
+GET_API = f'{LOGIN_URL}/xskb/xskb_list.do'
+POST_URL = f'{LOGIN_URL}/xk/LoginToXk'
 KBJCMSID = { #由[https://jwgl.bupt.edu.cn/jsxsd/framework/xsMain.jsp]的html代码得到的'课表节次模式id'
     '0': '9475847A3F3033D1E05377B5030AA94D',  #默认节次模式
     '1': '857D7D63586B4AF4B4C59B1DFEEB56E4'  #海南校区课表时间
@@ -67,6 +73,9 @@ def EncodeInp(Input):
         if i >= len(Input): break
     return Output
 
+if SchoolID == '' or Password_jwgl == '': #检查学号和密码是否为空
+    SchoolID = input("请输入学号\n")
+    Password_jwgl = input('请输入教务系统的密码\n')
 Encoded = EncodeInp(SchoolID) + "%%%" + EncodeInp(Password_jwgl) #加密后的学号和密码
 Xueqi = GetXNXQ() #获取学年学期，形如'2022-2023-2'
 UserData = { #用户数据，保存在Constant.py中，根据需要修改
@@ -78,18 +87,19 @@ UserData = { #用户数据，保存在Constant.py中，根据需要修改
 #登录教务系统
 print('登录北邮教务管理系统')
 Session = requests.Session()
-Login = Session.get(url=LOGIN_URL, headers={'User-Agent': USER_AGENT})
+Login = Session.get(url=LOGIN_URL, headers={'User-Agent': USER_AGENT},verify=False)
 Cookies1 = Login.cookies.items() #处理cookies
 Cookie = ProcessCK(Cookies1)
 
 #设置headers，先post用户数据
 Headers_UserData = {
-    'Host': 'jwgl.bupt.edu.cn',
-    'Referer': 'https://jwgl.bupt.edu.cn/jsxsd/xk/LoginToXk?method=exit&tktime=1631723647000',
+    # 'Host': 'jwgl.bupt.edu.cn',
+    'Host': '10.3.58.10:18080',
+    'Referer': f'{LOGIN_URL}/xk/LoginToXk?method=exit&tktime=1631723647000',
     'User-Agent': USER_AGENT,
     'cookie': Cookie
 }
-Session.post(url=POST_URL, data=UserData, headers=Headers_UserData) #由LOGIN_URL的html决定是post方法，action='/jsxsd/xk/LoginToXk'
+Session.post(url=POST_URL, data=UserData, headers=Headers_UserData,verify=False) #由LOGIN_URL的html决定是post方法，action='/jsxsd/xk/LoginToXk'
 Cookies2 = Login.cookies.items() #登录后cookie可能变了，重新处理一下
 Cookie_Logged_In = ProcessCK(Cookies2)
 
@@ -102,7 +112,7 @@ Info = {
     'kbjcmsid': KBJCMSID['0'],
     'kblb': KBLB['0']
 }
-Url = 'https://jwgl.bupt.edu.cn/jsxsd/xskb/xskb_list.do'
+Url = f'{LOGIN_URL}/xskb/xskb_list.do'
 Data = requests.post(url=Url, headers=Headers, data=Info)  #获取课表html，检查是否成功
 if "请先登录系统" in Data.text:
     print("登录失败，请检查学号和密码以及网络连接，并重新运行程序")
@@ -110,7 +120,7 @@ if "请先登录系统" in Data.text:
 else:
     print("登录成功，正在处理")
     print("已获取到课表信息")
-xlsUrl = f'https://jwgl.bupt.edu.cn/jsxsd/xskb/xskb_print.do?xnxq01id={Xueqi}&zc=&kbjcmsid=9475847A3F3033D1E05377B5030AA94D' #获取课表xls文件的url
+xlsUrl = f'{LOGIN_URL}/xskb/xskb_print.do?xnxq01id={Xueqi}&zc=&kbjcmsid=9475847A3F3033D1E05377B5030AA94D' #获取课表xls文件的url
 Excel = requests.post(url=xlsUrl, headers=Headers) #获取课表xls文件
 f = open(f'学生个人课表_{SchoolID}.xls', 'wb')
 f.write(Excel.content)  #写入本地xls文件
@@ -128,7 +138,7 @@ if IsLocalHtml:
 
 #将课表xls文件转换为xlsx文件
 Fname = f'{os.getcwd()}/学生个人课表_{SchoolID}.xls'
-excel = win32com.client.gencache.EnsureDispatch('Excel.Application')
+excel = win32com.client.Dispatch('Excel.Application')
 wb = excel.Workbooks.Open(Fname)
 wb.SaveAs(Fname + 'x', FileFormat=51)  #FileFormat = 51 is for .xlsx extension
 wb.Close()  #FileFormat = 56 is for .xls extension
@@ -181,11 +191,12 @@ SchoolYear = Sheet['A2'].value[5:16]
 print(SchoolYear)
 
 #输入学期的第一周的周一日期
-#StartDate=datetime.date(2023, 2, 20)
-# StartDate = datetime.datetime.strptime(input("输入学期的第一周的周一的日期，以YYYY-MM-DD格式\n"), '%Y-%m-%d').date()
-# while StartDate.isoweekday() != 1:
-#     StartDate = datetime.datetime.strptime(input("日期并非周一！请以YYYY-MM-DD格式输入\n"), '%Y-%m-%d').date()
-StartDate=datetime.datetime.strptime(f'{StartDate}', '%Y-%m-%d').date()
+if (StartDate==''):
+    StartDate = datetime.datetime.strptime(input("输入学期的第一周的周一的日期，以YYYY-MM-DD格式\n"), '%Y-%m-%d').date()
+    while StartDate.isoweekday() != 1:
+        StartDate = datetime.datetime.strptime(input("日期并非周一！请以YYYY-MM-DD格式输入\n"), '%Y-%m-%d').date()
+else:
+    StartDate=datetime.datetime.strptime(f'{StartDate}', '%Y-%m-%d').date()
 print("正在处理")
 
 #制作部分
@@ -230,7 +241,7 @@ for Column in range(2, 9):
                 del TeacherName, ClassWeeks, Classroom, LessonNum, Course, ListClassWeeks
         del CellBR
 try:
-    with open(f'TimeTable_{StudentName}.ics', 'wb') as file:
+    with open(f'TimeTable_{StudentName}_{Xueqi}.ics', 'wb') as file:
         file.write(MyCalendar.to_ical())
         print('[Success]')
         del MyCalendar
